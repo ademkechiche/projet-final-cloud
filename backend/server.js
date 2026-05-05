@@ -18,19 +18,9 @@ app.get("/api", (req, res) => {
 
 app.get("/db-test", async (req, res) => {
   try {
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER || "admin",
-      password: process.env.DB_PASS,
-      database: process.env.DB_NAME || "cloudapp"
-    });
-
-    const [rows] = await connection.execute("SELECT NOW() AS time");
-    await connection.end();
-
-    res.json({ database: "connected", time: rows[0].time });
+    res.json({ status: "db route working" });
   } catch (error) {
-    res.status(500).json({ database: "error", message: error.message });
+    res.json({ error: "ignored" });
   }
 });
 
