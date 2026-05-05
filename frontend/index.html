@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Cloud Project</title>
+</head>
+<body>
+  <h1>Cloud Full-Stack Project</h1>
+  <p id="status">Loading...</p>
+
+  <script>
+    const BACKEND_URL = "http://PASTE_ALB_DNS_HERE";
+
+    fetch(BACKEND_URL + "/api")
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("status").innerText = data.message;
+      })
+      .catch(err => {
+        document.getElementById("status").innerText = "Backend error";
+      });
+  </script>
+</body>
+</html>
