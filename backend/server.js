@@ -16,6 +16,10 @@ app.get("/api", (req, res) => {
   res.json({ message: "Backend is working behind ALB" });
 });
 
+app.get("/", (req, res) => {
+  res.send("Backend private EC2 is working");
+});
+
 app.get("/db-test", async (req, res) => {
   try {
     res.json({ status: "db route working" });

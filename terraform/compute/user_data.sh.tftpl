@@ -1,8 +1,8 @@
-compute/user_data.sh.tftpl:
 #!/bin/bash
 set -euxo pipefail
 
 APP_DIR="/home/ec2-user/app"
+BACKEND_DIR="$APP_DIR/backend"
 REPO_URL="${repo_url}"
 REPO_BRANCH="${repo_branch}"
 APP_PORT="${app_port}"
@@ -15,6 +15,7 @@ mkdir -p "$APP_DIR"
 chown -R ec2-user:ec2-user "$APP_DIR"
 
 if [ ! -d "$APP_DIR/.git" ]; then
+  rm -rf "$APP_DIR"
   sudo -u ec2-user git clone --branch "$REPO_BRANCH" "$REPO_URL" "$APP_DIR"
 else
   cd "$APP_DIR"
@@ -23,7 +24,7 @@ else
   sudo -u ec2-user git pull --ff-only origin "$REPO_BRANCH"
 fi
 
-cd "$APP_DIR"
+cd "$BACKEND_DIR"
 
 if [ -f package-lock.json ]; then
   sudo -u ec2-user npm ci --omit=dev
@@ -31,11 +32,9 @@ else
   sudo -u ec2-user npm install --omit=dev
 fi
 
-if [ -f "$APP_DIR/.env" ]; then
-  rm -f "$APP_DIR/.env"
-fi
+rm -f "$BACKEND_DIR/.env"
 
-cat > "$APP_DIR/.env" <<ENVVARS
+cat > "$BACKEND_DIR/.env" <<ENVVARS
 PORT=${app_port}
 USE_JSON_STORAGE=true
 DB_HOST=${db_host}
@@ -46,7 +45,7 @@ ENVVARS
 
 chown -R ec2-user:ec2-user "$APP_DIR"
 
-cat > /etc/systemd/system/backend.service <<'SERVICE'
+cat > /etc/systemd/system/backend.service <<SERVICE
 [Unit]
 Description=Node backend service
 After=network.target
@@ -54,9 +53,9 @@ After=network.target
 [Service]
 Type=simple
 User=ec2-user
-WorkingDirectory=/home/ec2-user/app
+WorkingDirectory=$BACKEND_DIR
 Environment=NODE_ENV=production
-EnvironmentFile=/home/ec2-user/app/.env
+EnvironmentFile=$BACKEND_DIR/.env
 ExecStart=/usr/bin/npm start
 Restart=always
 RestartSec=5
@@ -92,5 +91,3 @@ systemctl status nginx --no-pager || true
 ss -ltnp || true
 curl -fsS "http://127.0.0.1:${app_port}/" || true
 curl -fsS "http://127.0.0.1/" || true
-127.0.0.1
-127.0.0.1
